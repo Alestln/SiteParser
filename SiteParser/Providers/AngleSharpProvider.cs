@@ -2,7 +2,7 @@
 
 namespace SiteParser.Providers;
 
-public class UrlProvider(Uri baseUri) : IProvider
+public class AngleSharpProvider(Uri baseUri) : IProvider
 {
     private readonly HttpClient _httpClient = new();
 

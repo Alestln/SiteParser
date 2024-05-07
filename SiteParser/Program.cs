@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Microsoft.EntityFrameworkCore;
-using SiteParser.Parsers;
+﻿using SiteParser.Parsers;
 using SiteParser.Providers;
 using SiteParser.Services;
 
@@ -22,7 +20,7 @@ class Program
         const string url = "https://refactoring.guru/refactoring/smells";
         var baseUri = new Uri("https://refactoring.guru");
         
-        var provider = new UrlProvider(baseUri);
+        var provider = new AngleSharpProvider(baseUri);
         var parser = new WebParser(baseUri);
 
         // Fetch articles from the website
