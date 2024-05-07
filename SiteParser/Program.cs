@@ -1,4 +1,5 @@
-﻿using SiteParser.Parsers;
+﻿using System.Diagnostics;
+using SiteParser.Parsers;
 using SiteParser.Providers;
 
 namespace SiteParser;
@@ -9,14 +10,38 @@ class Program
     {
         string url = "https://refactoring.guru/refactoring/smells";
 
-        var provider = new WebProvider();
-        var webParser = new WebParser(await provider.GetDocumentAsync(url));
+        // TODO: Get BaseUri
+        var provider = new FlexibleUrlProvider(new Uri("https://refactoring.guru"));
+        var webParser = new WebParser();
 
-        var articles = await webParser.ParseArticlesAsync();
+        Stopwatch sw = new Stopwatch();
+        
+        sw.Start();
+        
+        var articles = 
+            await webParser.ParseArticlesAsync(await provider.GetDocumentAsync(url));
+        
+        sw.Stop();
 
-        foreach (var article in articles)
+        Console.WriteLine($"Parse articles time: {sw.ElapsedMilliseconds}");
+        
+        sw.Restart();
+        
+        // Паралельно отримуємо внутрішні посилання для кожної статті
+        // Время: 41
+        Parallel.ForEach(articles, async article =>
         {
-            Console.WriteLine(article);
-        }
+            article.InternalLinks =
+                await webParser.ParseInternalLinks(await provider.GetDocumentAsync(article.Url));
+        });
+        
+        // Время: 346
+        /*foreach (var article in articles)
+        {
+            article.InternalLinks =
+                await webParser.ParseInternalLinks(await provider.GetDocumentAsync(article.Url));
+        }*/
+        sw.Stop();
+        Console.WriteLine($"Parse internal links time: {sw.ElapsedMilliseconds}");
     }
 }

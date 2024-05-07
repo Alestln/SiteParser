@@ -2,7 +2,7 @@
 
 namespace SiteParser.Providers;
 
-public interface IWebProvider
+public interface IProvider
 {
     Task<IDocument> GetDocumentAsync(string url);
 }
