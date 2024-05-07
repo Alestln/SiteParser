@@ -7,5 +7,5 @@ public interface IParser
 {
     Task<IEnumerable<Article>> ParseArticlesAsync(IDocument document);
 
-    Task<IEnumerable<Article>> ParseInternalLinks(IDocument document);
+    Task<List<Article>> ParseInternalLinks(IDocument document);
 }

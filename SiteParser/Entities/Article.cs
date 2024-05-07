@@ -6,7 +6,9 @@ public class Article
 
     public string Url { get; set; }
 
-    public IEnumerable<Article> InternalLinks { get; set; }
+    public List<Article> InternalLinks { get; set; } = new();
+    
+    private Article(){}
 
     public static Article Create(string title, string url)
     {
@@ -19,6 +21,6 @@ public class Article
     
     public override string ToString()
     {
-        return $"Title: {Title}\nUrl: {Url}\n\n";
+        return $"Title: {Title}\nUrl: {Url}\n";
     }
 }

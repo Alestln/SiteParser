@@ -31,8 +31,17 @@ public class WebParser : IParser
         return articles;*/
     }
     
-    public async Task<IEnumerable<Article>> ParseInternalLinks(IDocument document)
+    public async Task<List<Article>> ParseInternalLinks(IDocument document)
     {
-        return new List<Article>();
+        var articles = document
+            .QuerySelectorAll(".relations.link-list a[href]")
+            .Select(element => Article.Create(
+                    element.TextContent,
+                    element.GetAttribute("href")
+                    ?? throw new InvalidOperationException("Article link not found.")
+                )
+            );
+
+        return articles.ToList();
     }
 }
