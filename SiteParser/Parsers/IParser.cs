@@ -5,7 +5,7 @@ namespace SiteParser.Parsers;
 
 public interface IParser
 {
-    Task<IEnumerable<Article>> ParseArticlesAsync(IDocument document);
+    ValueTask<List<Article>> ParseArticles(IDocument document);
 
-    Task<List<Article>> ParseInternalLinks(IDocument document);
+    ValueTask<List<Article>> ParseInternalLinks(IDocument document);
 }

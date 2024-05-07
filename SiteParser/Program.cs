@@ -1,5 +1,5 @@
-﻿using System.Collections;
-using System.Diagnostics;
+﻿using Microsoft.EntityFrameworkCore;
+using SiteParser.Commands;
 using SiteParser.Entities;
 using SiteParser.Parsers;
 using SiteParser.Providers;
@@ -10,33 +10,36 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        string url = "https://refactoring.guru/refactoring/smells";
+        // CancellationTokenSource for cancellation handling
+        using var source = new CancellationTokenSource();
+        
+        // Configure DbContext options
+        var optionsBuilder = new DbContextOptionsBuilder<ParserDbContext>();
+        optionsBuilder.UseNpgsql("Server=localhost;Port=5432;Database=parser;Username=postgres;Password=123456");
 
-        // TODO: Get BaseUri
-        var provider = new FlexibleUrlProvider(new Uri("https://refactoring.guru"));
-        var webParser = new WebParser();
+        // Create an instance of your DbContext
+        await using var dbContext = new ParserDbContext(optionsBuilder.Options);
+        
+        // Ensure the database is created and apply any pending migrations
+        await dbContext.Database.EnsureCreatedAsync(source.Token);
 
-        Stopwatch sw = new Stopwatch();
+        var baseUri = new Uri("https://refactoring.guru");
+        var url = "https://refactoring.guru/refactoring/smells";
         
-        sw.Start();
-        
-        var articles = 
-            await webParser.ParseArticlesAsync(await provider.GetDocumentAsync(url));
-        
-        sw.Stop();
+        var provider = new FlexibleUrlProvider(baseUri);
+        var parser = new WebParser(baseUri);
 
-        // не работает
-        articles.First().InternalLinks = new List<Article>() { Article.Create("sdfsf", "sdfsdf8s9d7f") };
-        Console.WriteLine($"Parse articles time: {sw.ElapsedMilliseconds}");
-        
-        sw.Restart();
-        
+        // Fetch articles from the website
+        var articles = await parser.ParseArticles(await provider.GetDocumentAsync(url));
+
+        var saveArticleService = new SaveArticle(dbContext);
         foreach (var article in articles)
         {
-            article.InternalLinks = await webParser.ParseInternalLinks(await provider.GetDocumentAsync(article.Url));
+            // Parse internal links for each article
+            article.InternalLinks = await parser.ParseInternalLinks(await provider.GetDocumentAsync(article.Url));
+
+            // Save the article to the database
+            await saveArticleService.SaveAsync(article, source.Token);
         }
-        
-        sw.Stop();
-        Console.WriteLine($"Parse internal links time: {sw.ElapsedMilliseconds}");
     }
 }

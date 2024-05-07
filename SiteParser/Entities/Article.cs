@@ -1,26 +1,13 @@
-﻿namespace SiteParser.Entities;
+﻿using System.Text;
+
+namespace SiteParser.Entities;
 
 public class Article
 {
+    public int Id { get; set; }
     public string Title { get; set; }
 
     public string Url { get; set; }
-
-    public List<Article> InternalLinks { get; set; } = new();
     
-    private Article(){}
-
-    public static Article Create(string title, string url)
-    {
-        return new Article
-        {
-            Title = title,
-            Url = url
-        };
-    }
-    
-    public override string ToString()
-    {
-        return $"Title: {Title}\nUrl: {Url}\n";
-    }
+    public ICollection<Article>? InternalLinks { get; set; }
 }

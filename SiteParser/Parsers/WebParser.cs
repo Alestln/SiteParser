@@ -3,23 +3,19 @@ using SiteParser.Entities;
 
 namespace SiteParser.Parsers;
 
-public class WebParser : IParser
+public class WebParser(Uri baseUri) : IParser
 {
-    public async Task<IEnumerable<Article>> ParseArticlesAsync(IDocument document)
+    public ValueTask<List<Article>> ParseArticles(IDocument document)
     {
-        var articleHeaders = document
-            .QuerySelectorAll(".section-bordered.link-list h3");
-        
-        var articles = articleHeaders.Select(header => 
-            Article.Create(
-                header.TextContent.Trim(), 
-                header.QuerySelector("a")?.GetAttribute("href")
-                    ?? throw new InvalidOperationException("Article link not found.")
-                )
-            );
+        return ValueTask.FromResult(document
+            .QuerySelectorAll(".section-bordered.link-list h3")
+            .Select(header => new Article()
+            {
+                Title = header.TextContent,
+                Url = new Uri(baseUri, header.QuerySelector("a")?.GetAttribute("href")
+                                       ?? throw new InvalidOperationException("Article link not found.")).AbsoluteUri
+            }).ToList());
 
-        return articles;
-        
         // Конкурентна колекція для зберігання результатів паралельних викликів
         /*var articles = new ConcurrentBag<Article>();
 
@@ -31,17 +27,15 @@ public class WebParser : IParser
         return articles;*/
     }
     
-    public async Task<List<Article>> ParseInternalLinks(IDocument document)
+    public ValueTask<List<Article>> ParseInternalLinks(IDocument document)
     {
-        var articles = document
+        return ValueTask.FromResult(document
             .QuerySelectorAll(".relations.link-list a[href]")
-            .Select(element => Article.Create(
-                    element.TextContent,
-                    element.GetAttribute("href")
-                    ?? throw new InvalidOperationException("Article link not found.")
-                )
-            );
-
-        return articles.ToList();
+            .Select(element => new Article
+            {
+                Title = element.TextContent,
+                Url = new Uri(baseUri, element.GetAttribute("href")
+                              ?? throw new InvalidOperationException("Article link not found.")).AbsoluteUri
+            }).ToList());
     }
 }
