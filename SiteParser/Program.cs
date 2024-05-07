@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Runtime.InteropServices;
+using Microsoft.EntityFrameworkCore;
 using SiteParser.Parsers;
 using SiteParser.Providers;
 using SiteParser.Services;
@@ -26,14 +27,14 @@ class Program
 
         // Fetch articles from the website
         var articles = await parser.ParseArticles(await provider.GetDocumentAsync(url));
-
-        var saveArticlesService = new SaveArticles(dbContext);
+        
         foreach (var article in articles)
         {
             // Parse internal links for each article
             article.InternalLinks = await parser.ParseInternalLinks(await provider.GetDocumentAsync(article.Url));
         }
         
+        var saveArticlesService = new SaveArticles(dbContext);
         await saveArticlesService.SaveAsync(articles, source.Token);
     }
 }
